@@ -63,9 +63,12 @@ func newType(typ reflect.Type, c echo.Context) (reflect.Value, error) {
 					return requestObj, err
 				}
 				c.Request().Body = io.NopCloser(bytes.NewBuffer(buf))
-				if err = c.Bind(value); err != nil {
+				if err = (&echo.DefaultBinder{}).BindBody(c, value); err != nil {
 					return requestObj, err
 				}
+				// if err = c.Bind(value); err != nil {
+				// 	return requestObj, err
+				// }
 				c.Request().Body = io.NopCloser(bytes.NewBuffer(buf)) // for next handler
 			} else {
 				err = decoder.Decode(value, pathAndQueryParams)

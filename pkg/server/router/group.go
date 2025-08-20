@@ -32,17 +32,17 @@ func (r *RouterGroup) GET(relativePath string, handlers ...HandlerFunc) {
 
 func (r *RouterGroup) PUT(relativePath string, handlers ...HandlerFunc) {
 	route := r.EchoGroup.PUT(relativePath, Handles(handlers...))
-	buildSwagger(route.Path, http.MethodPut, r.Tag, handlers)
+	buildSwagger(route.Path, http.MethodPut, r.Tag, handlers...)
 }
 
 func (r *RouterGroup) POST(relativePath string, handlers ...HandlerFunc) {
 	route := r.EchoGroup.POST(relativePath, Handles(handlers...))
-	buildSwagger(route.Path, http.MethodPost, r.Tag, handlers)
+	buildSwagger(route.Path, http.MethodPost, r.Tag, handlers...)
 }
 
 func (r *RouterGroup) DELETE(relativePath string, handlers ...HandlerFunc) {
 	route := r.EchoGroup.DELETE(relativePath, Handles(handlers...))
-	buildSwagger(route.Path, http.MethodDelete, r.Tag, handlers)
+	buildSwagger(route.Path, http.MethodDelete, r.Tag, handlers...)
 }
 
 func Handles(handlers ...HandlerFunc) echo.HandlerFunc {
