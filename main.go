@@ -34,8 +34,7 @@ func main() {
 	g := server.RouterGroup.Group("/api", "api")
 	g.GET("/users", token, getUsers, "用户列表")
 	g.GET("/users2", getUsers2, "用户列表2")
-	server.Start()
-	
+	server.Start()	
 }
 
 func getUsers(req *User) error {
