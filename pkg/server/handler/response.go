@@ -9,7 +9,7 @@ import (
 )
 
 type RespObj struct {
-	Errno int         `json:"errno"`
+	Code  int         `json:"code"`
 	Msg   string      `json:"msg"`
 	Data  interface{} `json:"data,string"`
 }
@@ -21,10 +21,10 @@ func RespJson(ctx *echo.Context, outs []reflect.Value, err error) error {
 	}
 	if err != nil {
 		if bizError, ok := err.(*types.BizError); ok {
-			rest.Errno = bizError.Code()
+			rest.Code = bizError.Code()
 			rest.Msg = bizError.Error()
 		} else {
-			rest.Errno = http.StatusInternalServerError
+			rest.Code = http.StatusInternalServerError
 			rest.Msg = err.Error()
 		}
 	}
@@ -35,5 +35,5 @@ var HTTPErrorHandler = func(err error, ctx echo.Context) {
 	if ctx.Response().Committed {
 		return
 	}
-	ctx.JSON(500, RespObj{Errno: 500, Msg: err.Error()})
+	ctx.JSON(500, RespObj{Code: 500, Msg: err.Error()})
 }

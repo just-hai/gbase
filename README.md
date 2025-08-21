@@ -29,89 +29,82 @@ go get github.com/just-hai/gbase
 package main
 
 import (
-    "github.com/just-hai/gbase/pkg/server"
-    "github.com/just-hai/gbase/pkg/types"
+	"github.com/just-hai/gbase/pkg/server"
+	"github.com/just-hai/gbase/pkg/types"
+	"github.com/labstack/echo/v4"
 )
 
 func main() {
-    // 创建服务器实例（自动加载环境变量配置）
-    srv := server.New()
+	srv := server.New()
+	api := srv.RouterGroup.Group("/api/v1", "API v1")
+	api.GET("/products", checkUser, getProducts, "获取商品")
+	api.POST("/products", addProduct, "创建商品")
+	api.PUT("/products/:id", checkUser, updateProduct, "更新商品")
+	api.DELETE("/products/:id", deleteProduct, "删除商品")
 
-    // 创建 API 路由组
-    api := srv.RouterGroup.Group("/api/v1", "API v1")
-    
-    // 注册路由
-    api.GET("/users", getUsers, "获取用户列表")
-    api.POST("/users", createUser, "创建用户")
-    api.GET("/users/:id", getUserByID, "根据ID获取用户")
-
-    // 启动服务器（支持优雅关闭）
-    srv.Start()
+	srv.Start()
 }
 
-// 处理器函数 - 支持自动参数绑定和类型转换
-func getUsers(req *GetUsersRequest) (*GetUsersResponse, error) {
-    // 业务逻辑
-    users := []User{
-        {ID: 1, Name: "张三", Email: "zhangsan@example.com"},
-        {ID: 2, Name: "李四", Email: "lisi@example.com"},
-    }
-    
-    return &GetUsersResponse{
-        Users: users,
-        Total: len(users),
-    }, nil
+func checkUser(ctx echo.Context) (*User, error) {
+	// do some check
+
+	// return nil, types.BizErr("用户不存在")
+	return &User{
+		Id:   11,
+		Name: "zhanghai",
+	}, nil
 }
 
-func createUser(req *CreateUserRequest) (*User, error) {
-    // 参数验证已自动完成
-    user := &User{
-        ID:    generateID(),
-        Name:  req.Name,
-        Email: req.Email,
-    }
-    
-    // 保存到数据库...
-    
-    return user, nil
+// user从前面的checkUser获取
+func getProducts(user *User, req *ProductDTO) ([]Product, error) {
+	if req.Page > 5 && req.Page < 10 {
+		return nil, types.NewBizError(400, "用户列表页码不能大于5")
+	}
+	if req.Page > 10 {
+		return nil, types.BizErr("用户列表页码不能大于10")
+	}
+	return []Product{
+		{ID: 1, Name: "张三", Intro: "zhangsan@example.com", UID: user.Id},
+		{ID: 2, Name: "李四", Intro: "lisi@example.com", UID: user.Id},
+	}, nil
 }
 
-func getUserByID(req *GetUserByIDRequest) (*User, error) {
-    if req.ID <= 0 {
-        return nil, types.CodeBizError(400, "无效的用户ID")
-    }
-    
-    // 查询数据库...
-    user := &User{ID: req.ID, Name: "用户" + string(req.ID)}
-    return user, nil
+func addProduct(req *struct{ Body Product }) (*Product, error) {
+	req.Body.ID = 2
+	return &req.Body, nil
 }
 
-// 请求和响应结构体
-type GetUsersRequest struct {
-    Page     int    `query:"page" validate:"min=1" default:"1" desc:"页码"`
-    PageSize int    `query:"page_size" validate:"min=1,max=100" default:"10" desc:"每页数量"`
-    Keyword  string `query:"keyword" desc:"搜索关键词"`
+func updateProduct(user *User, req *struct {
+	Id   int
+	Body Product
+}) (*Product, error) {
+	req.Body.ID = req.Id
+	req.Body.UID = user.Id
+	return &req.Body, nil
 }
 
-type CreateUserRequest struct {
-    Name  string `json:"name" validate:"required,min=2,max=50" desc:"用户名"`
-    Email string `json:"email" validate:"required,email" desc:"邮箱地址"`
+func deleteProduct(req *struct{ Id int }) error {
+	return nil
 }
 
-type GetUserByIDRequest struct {
-    ID int `param:"id" validate:"required,min=1" desc:"用户ID"`
+type ProductDTO struct {
+	Page     int    `validate:"min=1" desc:"页码"`
+	PageSize int    `validate:"min=1,max=100" desc:"每页数量"`
+	Keyword  string `desc:"搜索关键词"`
+}
+
+type Product struct {
+	ID    int    `json:"id" desc:"用户ID"`
+	UID   int    `json:"uid" desc:"用户ID"`
+	Name  string `json:"name" form:"name" validate:"required" desc:"用户名"`
+	Intro string `json:"intro" form:"intro" validate:"required" desc:"简介"`
 }
 
 type User struct {
-    ID    int    `json:"id" desc:"用户ID"`
-    Name  string `json:"name" desc:"用户名"`
-    Email string `json:"email" desc:"邮箱地址"`
+	Id   int
+	Name string
 }
 
-type GetUsersResponse struct {
-    Users []User `json:"users" desc:"用户列表"`
-    Total int    `json:"total" desc:"总数量"`
-}
 ```
 
 ## ⚙️ 配置管理
@@ -163,20 +156,10 @@ import (
     "github.com/just-hai/gbase/pkg/config"
 )
 
-func initDB() {
-    // 初始化数据库连接
-    err := db.InitMysql(&config.Conf.Mysql)
-    if err != nil {
-        log.Fatal("数据库初始化失败:", err)
-    }
-    
-    // 使用主库
-    result := db.Master.Create(&user)
-    
-    // 使用从库（只读）
-    var users []User
-    db.Slave.Find(&users)
-}
+   // 初始化mysql连接，可读写分离
+   db.Init()
+   var users []User
+   db.Client.Find(&users)
 ```
 
 ## 🔄 Redis 使用
@@ -184,17 +167,10 @@ func initDB() {
 ```go
 import (
     "github.com/just-hai/gbase/pkg/redis"
-    "github.com/just-hai/gbase/pkg/config"
 )
 
-func initRedis() {
-    // 初始化 Redis 连接
-    redis.InitRedis(&config.Conf.Redis)
-    
-    // 使用 Redis
-    redis.Client.Set(ctx, "key", "value", time.Hour)
-    val := redis.Client.Get(ctx, "key").Val()
-}
+    redis.Init()
+    redis.Client.Set(context.TODO(), "key", "value", 0)
 ```
 
 ## 💾 缓存系统
