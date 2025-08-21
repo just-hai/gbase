@@ -8,7 +8,7 @@ import (
 
 type (
 	Base struct {
-		AppName    string `envconfig:"APP_NAME" default:"hai-server"` // 服务名
+		AppName    string `envconfig:"APP_NAME" default:"just-hai"` // 服务名
 		AppVersion string `envconfig:"APP_VERSION" default:"1.0.0"`
 		Port       string `envconfig:"PORT"`    // 端口
 		Env        string `envconfig:"ENV"`     // 环境信息
