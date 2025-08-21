@@ -231,7 +231,7 @@ func initLogging() {
 启用 Swagger 后，可通过以下地址访问：
 
 - **Swagger JSON**: `http://localhost:8080/swagger.json`
-- **Swagger UI**: `http://localhost:8080/swagger/`
+- **Swagger UI**: `http://localhost:8080/swagger/index.html`
 
 API 文档会根据你的路由定义和结构体标签自动生成。
 
