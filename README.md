@@ -1,6 +1,6 @@
-# GBase - 企业级 Golang 微服务基础库
+# GBase - Golang 服务基础库
 
-GBase 是一个功能完整的 Golang 微服务基础库，基于 Echo v4 框架构建，提供了构建现代 Web 服务所需的全套基础设施组件。
+GBase 是一个功能完整的 Golang 服务基础库，基于 Echo v4 框架构建，提供了构建现代 Web 服务所需的全套基础设施组件。
 
 ## ✨ 核心特性
 
