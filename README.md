@@ -51,7 +51,7 @@ func checkUser(ctx echo.Context) (*User, error) {
 	// return nil, types.BizErr("用户不存在")
 	return &User{
 		Id:   11,
-		Name: "zhanghai",
+		Name: "just-hai",
 	}, nil
 }
 
