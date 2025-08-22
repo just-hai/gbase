@@ -258,6 +258,7 @@ pkg/
 │   │   └── types.go     # 类型绑定和验证
 │   ├── middleware/  # 中间件
 │   │   └── request-logger.go # 请求日志中间件
+|   |   └── request-sign.go   # 接口签名验证
 │   ├── router/      # 路由管理
 │   │   └── group.go     # 路由组和 Swagger 集成
 │   └── server.go    # 服务器核心实现
