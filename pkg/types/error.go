@@ -1,8 +1,8 @@
 package types
 
 type BizError struct {
-	code       int
-	message    string
+	code    int
+	message string
 }
 
 func (e *BizError) Code() int {
@@ -20,3 +20,8 @@ func NewBizError(code int, message string) *BizError {
 func BizErr(message string) *BizError {
 	return NewBizError(500, message)
 }
+
+var (
+	ParamsError = NewBizError(400, "参数错误")
+	SignError   = NewBizError(400, "参数错误2")
+)
