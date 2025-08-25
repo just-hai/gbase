@@ -12,13 +12,18 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func CheckSign() echo.MiddlewareFunc {
+type CheckSignOptions struct {
+	Secret string  // 密钥
+	Expire int     // 过期时间（秒）
+}
+
+func CheckSign(options CheckSignOptions) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			timestamp := c.Request().Header.Get("X-Timestamp")
 			sign := c.Request().Header.Get("X-Sign")
-			fmt.Println(utils.SHA256(timestamp+getAllParams(c), ""))
-			if timestamp == "" || sign == "" || !validateTimestamp(timestamp) ||
+			fmt.Println(utils.SHA256(timestamp+getAllParams(c), options.Secret))
+			if timestamp == "" || sign == "" || !validateTimestamp(timestamp, options.Expire) ||
 				sign != utils.SHA256(timestamp+getAllParams(c), "") {
 				return types.SignError
 			}
@@ -66,13 +71,17 @@ func getAllParams(c echo.Context) string {
 	return params
 }
 
-func validateTimestamp(timestamp string) bool {
+func validateTimestamp(timestamp string, expire int) bool {
 	t, err := strconv.ParseInt(timestamp, 10, 64)
 	if err != nil {
 		return false
 	}
-	// 5分钟过期
-	if time.Now().Add(-5 * time.Minute).Before(time.UnixMilli(t)) {
+
+	if expire < 1 {
+		expire = 5 * 60 // 5分钟过期
+	}
+
+	if time.Now().Add(-time.Duration(expire) * time.Second).Before(time.UnixMilli(t)) {
 		return false
 	}
 	v := t / 1000
